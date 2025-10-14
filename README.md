@@ -275,7 +275,7 @@ Feel free to submit issues and enhancement requests!
 
 MIT License - feel free to use this project for learning and production.
 
-- MONGODB_URI=mongodb+srv://shutiye:carfaaye143@expensetrackerapp.wbiqizf.mongodb.net/?retryWrites=true&w=majority&appName=expenseTrackerApp
+- MONGODB_URI=mongodb+srv://shutiye:carfaaye143@expensetrackerapp.wbiqizf.mongodb.net/expense_tracker?retryWrites=true&w=majority&appName=expenseTrackerApp
 JWT_SECRET=3b806f639d4eaa8614b6c4e5bb0b83eb106a2b53782d4c770dcf4eec1c961a5c
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 

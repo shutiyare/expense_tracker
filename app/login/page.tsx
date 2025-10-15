@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Wallet, Loader2 } from "lucide-react";
-import apiClient from "@/lib/axios";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,41 +32,67 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.post("/api/auth/login", formData);
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+        callbackUrl: "/",
+      });
 
-      // Store token in localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      console.log("SignIn result:", result);
 
-      // Redirect to dashboard
-      router.push("/");
+      if (result?.error) {
+        // Provide more specific error messages
+        switch (result.error) {
+          case "CredentialsSignin":
+            setError(
+              "Invalid email or password. Please check your credentials."
+            );
+            break;
+          case "Configuration":
+            setError("Authentication configuration error. Please try again.");
+            break;
+          case "AccessDenied":
+            setError("Access denied. Please contact support.");
+            break;
+          default:
+            setError(`Login failed: ${result.error}`);
+        }
+      } else if (result?.ok) {
+        console.log("Login successful, redirecting...");
+        // Use window.location for a full page redirect to ensure proper state update
+        window.location.href = "/";
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 p-4 animate-gradient-x">
+      <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary rounded-full">
-              <Wallet className="h-8 w-8 text-primary-foreground" />
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-lg animate-float">
+              <Wallet className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-base">
             Enter your credentials to access your expense tracker
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
+              <div className="p-3 bg-red-50 text-red-800 text-sm rounded-lg border border-red-200 animate-shake">
                 {error}
               </div>
             )}
@@ -83,6 +109,7 @@ export default function LoginPage() {
                 }
                 required
                 disabled={loading}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
@@ -98,12 +125,17 @@ export default function LoginPage() {
                 }
                 required
                 disabled={loading}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -126,6 +158,15 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <footer className="mt-8 text-center">
+        <p className="text-sm text-gray-600">
+          © 2025 ExpenseTracker. Developed with ❤️ by{" "}
+          <span className="font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Eng. Shutiye
+          </span>
+        </p>
+      </footer>
     </div>
   );
 }

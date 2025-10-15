@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+import { ConditionalLayout } from "@/components/ConditionalLayout";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +31,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar />
-        <main className="md:pl-64">
-          <div className="md:p-8 p-4 pt-20 md:pt-8">{children}</div>
-        </main>
+        <SessionProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+          <ToastProvider />
+        </SessionProvider>
       </body>
     </html>
   );

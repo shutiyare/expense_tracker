@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +16,8 @@ import {
 } from "lucide-react";
 import apiClient from "@/lib/axios";
 import { format } from "date-fns";
+import { IncomeModal } from "@/components/modals/IncomeModal";
+import { useToast } from "@/hooks/use-toast";
 
 interface Income {
   _id: string;
@@ -35,12 +35,14 @@ interface Income {
 }
 
 export default function IncomesPage() {
-  const router = useRouter();
+  const { toast } = useToast();
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSource, setFilterSource] = useState("all");
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
 
   useEffect(() => {
     fetchIncomes();
@@ -65,12 +67,30 @@ export default function IncomesPage() {
       setDeleteLoading(id);
       await apiClient.delete(`/api/incomes/${id}`);
       setIncomes(incomes.filter((income) => income._id !== id));
+      toast({
+        title: "Deleted!",
+        description: "Income deleted successfully.",
+      });
     } catch (error) {
       console.error("Error deleting income:", error);
-      alert("Failed to delete income");
+      toast({
+        title: "Error",
+        description: "Failed to delete income",
+        variant: "destructive",
+      });
     } finally {
       setDeleteLoading(null);
     }
+  };
+
+  const handleEdit = (income: Income) => {
+    setEditingIncome(income);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingIncome(null);
   };
 
   const filteredIncomes = incomes.filter((income) => {
@@ -107,33 +127,45 @@ export default function IncomesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Incomes</h1>
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            Incomes
+          </h1>
           <p className="text-muted-foreground mt-1">
             Track your income sources and earnings.
           </p>
         </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href="/incomes/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Income
-          </Link>
+        <Button
+          onClick={() => setModalOpen(true)}
+          className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Income
         </Button>
       </div>
 
+      <IncomeModal
+        open={modalOpen}
+        onOpenChange={handleModalClose}
+        onSuccess={fetchIncomes}
+        income={editingIncome}
+      />
+
       {/* Summary Card */}
-      <Card>
+      <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
-            Total Income
+            <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl">Total Income</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-green-600">
+          <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             ${totalIncomes.toLocaleString()}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
@@ -190,11 +222,12 @@ export default function IncomesPage() {
                   ? "Try adjusting your search or filter criteria."
                   : "Start tracking your income by adding your first income source."}
               </p>
-              <Button asChild>
-                <Link href="/incomes/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Income
-                </Link>
+              <Button
+                onClick={() => setModalOpen(true)}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Income
               </Button>
             </div>
           ) : (
@@ -202,7 +235,7 @@ export default function IncomesPage() {
               {filteredIncomes.map((income) => (
                 <div
                   key={income._id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div className="p-2 bg-green-100 text-green-600 rounded-full">
@@ -254,9 +287,8 @@ export default function IncomesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                          router.push(`/incomes/edit/${income._id}`)
-                        }
+                        onClick={() => handleEdit(income)}
+                        className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

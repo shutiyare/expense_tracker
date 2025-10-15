@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Expense from "@/models/Expense";
+import Category from "@/models/Category"; // Import Category model for populate
 import { connectDB } from "@/lib/db";
 import { getUserFromRequest } from "@/lib/auth";
 

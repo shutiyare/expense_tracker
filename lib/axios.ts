@@ -1,7 +1,8 @@
 import axios from "axios";
+import { getSession } from "next-auth/react";
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "",
   headers: {
     "Content-Type": "application/json",
   },
@@ -9,11 +10,12 @@ const apiClient = axios.create({
 
 // Add authentication token to requests
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Get the session from NextAuth
+      const session = await getSession();
+      if (session?.accessToken) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`;
       }
     }
     return config;
@@ -26,14 +28,11 @@ apiClient.interceptors.request.use(
 // Handle 401 responses (unauthorized)
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Clear local storage and redirect to login
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-      }
+      // Import signOut dynamically to avoid SSR issues
+      const { signOut } = await import("next-auth/react");
+      await signOut({ redirect: true, callbackUrl: "/login" });
     }
     return Promise.reject(error);
   }

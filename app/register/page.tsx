@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // Register the user
       await apiClient.post("/api/auth/register", {
         name: formData.name,
         email: formData.email,
@@ -59,10 +61,23 @@ export default function RegisterPage() {
 
       setSuccess(true);
 
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      // Auto login after successful registration
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.message || "Registration failed. Please try again."
@@ -73,32 +88,32 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-100 p-4 animate-gradient-x">
+      <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary rounded-full">
-              <Wallet className="h-8 w-8 text-primary-foreground" />
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full shadow-lg animate-float">
+              <Wallet className="h-8 w-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Create an Account
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base">
             Start tracking your expenses and manage your finances
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 animate-shake">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="p-3 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-sm rounded-md border border-green-200 dark:border-green-800">
-                Account created successfully! Redirecting to login...
+              <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200 animate-bounce-in">
+                Account created successfully! Logging you in...
               </div>
             )}
 
@@ -114,6 +129,7 @@ export default function RegisterPage() {
                 }
                 required
                 disabled={loading || success}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
@@ -129,6 +145,7 @@ export default function RegisterPage() {
                 }
                 required
                 disabled={loading || success}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
@@ -145,6 +162,7 @@ export default function RegisterPage() {
                 required
                 disabled={loading || success}
                 minLength={6}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
@@ -161,6 +179,7 @@ export default function RegisterPage() {
                 required
                 disabled={loading || success}
                 minLength={6}
+                className="bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
@@ -191,7 +210,7 @@ export default function RegisterPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all duration-200"
               disabled={loading || success}
             >
               {loading ? (
@@ -216,6 +235,15 @@ export default function RegisterPage() {
           </CardFooter>
         </form>
       </Card>
+
+      <footer className="mt-8 text-center">
+        <p className="text-sm text-gray-600">
+          © 2025 ExpenseTracker. Developed with ❤️ by{" "}
+          <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Eng. Shutiye
+          </span>
+        </p>
+      </footer>
     </div>
   );
 }

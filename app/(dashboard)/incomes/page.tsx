@@ -6,6 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Plus,
   Search,
   Edit,
@@ -13,6 +28,8 @@ import {
   TrendingUp,
   Calendar,
   Loader2,
+  Filter,
+  Download,
   RefreshCw,
 } from "lucide-react";
 import apiClient from "@/lib/axios";
@@ -36,14 +53,14 @@ interface Income {
 }
 
 export default function IncomesPage() {
-  const { toast } = useToast();
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSource, setFilterSource] = useState("all");
-  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchIncomes();
@@ -53,25 +70,27 @@ export default function IncomesPage() {
     try {
       setLoading(true);
       const response = await apiClient.get("/api/incomes");
-      // API returns { data: [...], pagination: {...} }
       setIncomes(response.data.data || []);
     } catch (error) {
       console.error("Error fetching incomes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch incomes",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this income?")) return;
-
     try {
       setDeleteLoading(id);
       await apiClient.delete(`/api/incomes/${id}`);
       setIncomes(incomes.filter((income) => income._id !== id));
       toast({
-        title: "Deleted!",
-        description: "Income deleted successfully.",
+        title: "Success",
+        description: "Income deleted successfully",
       });
     } catch (error) {
       console.error("Error deleting income:", error);
@@ -87,75 +106,67 @@ export default function IncomesPage() {
 
   const handleEdit = (income: Income) => {
     setEditingIncome(income);
-    setModalOpen(true);
+    setShowModal(true);
   };
 
-  const handleModalClose = () => {
-    setModalOpen(false);
+  const handleModalSuccess = () => {
+    setShowModal(false);
     setEditingIncome(null);
+    fetchIncomes();
   };
 
   const filteredIncomes = incomes.filter((income) => {
     const matchesSearch =
       income.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       income.notes.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSource =
+    const matchesFilter =
       filterSource === "all" || income.source === filterSource;
-    return matchesSearch && matchesSource;
+    return matchesSearch && matchesFilter;
   });
 
   const totalIncomes = incomes.reduce((sum, income) => sum + income.amount, 0);
+  const incomeSources = [...new Set(incomes.map((income) => income.source))];
 
   const getSourceColor = (source: string) => {
-    const colors = {
-      salary: "bg-green-100 text-green-800",
-      freelance: "bg-blue-100 text-blue-800",
-      investment: "bg-purple-100 text-purple-800",
-      gift: "bg-pink-100 text-pink-800",
+    const colors: { [key: string]: string } = {
+      salary: "bg-blue-100 text-blue-800",
+      freelance: "bg-green-100 text-green-800",
+      business: "bg-purple-100 text-purple-800",
+      investment: "bg-yellow-100 text-yellow-800",
       other: "bg-gray-100 text-gray-800",
     };
-    return colors[source as keyof typeof colors] || colors.other;
+    return colors[source.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading incomes...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             Incomes
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Track your income sources and earnings.
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
+            Track and manage your income sources
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
-            variant="outline"
-            size="sm"
             onClick={fetchIncomes}
+            variant="outline"
+            className="w-full sm:w-auto"
             disabled={loading}
-            className="hover:bg-gray-50 w-full sm:w-auto"
           >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
             Refresh
           </Button>
           <Button
-            onClick={() => setModalOpen(true)}
-            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
+            onClick={() => setShowModal(true)}
+            className="w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Income
@@ -163,43 +174,75 @@ export default function IncomesPage() {
         </div>
       </div>
 
-      <IncomeModal
-        open={modalOpen}
-        onOpenChange={handleModalClose}
-        onSuccess={fetchIncomes}
-        income={editingIncome}
-      />
-
-      {/* Summary Card */}
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-white" />
+      {/* Stats Cards */}
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total Income
+            </CardTitle>
+            <div className="p-2 bg-green-100 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </div>
-            <span className="text-xl">Total Income</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            ${totalIncomes.toLocaleString()}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {incomes.length} income source{incomes.length !== 1 ? "s" : ""}{" "}
-            recorded
-          </p>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">
+              ${totalIncomes.toLocaleString()}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              From {incomes.length} income source
+              {incomes.length !== 1 ? "s" : ""}
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* Filters */}
-      <Card>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Average Amount
+            </CardTitle>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600">
+              $
+              {incomes.length > 0
+                ? (totalIncomes / incomes.length).toLocaleString()
+                : "0"}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Per income source</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Income Sources
+            </CardTitle>
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Calendar className="h-4 w-4 text-purple-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600">
+              {incomeSources.length}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Unique sources</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters and Search */}
+      <Card className="border-0 shadow-lg bg-white">
         <CardHeader>
           <CardTitle className="text-lg sm:text-xl">Filter & Search</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search incomes..."
                 value={searchTerm}
@@ -207,143 +250,196 @@ export default function IncomesPage() {
                 className="pl-10 w-full"
               />
             </div>
-            <select
-              value={filterSource}
-              onChange={(e) => setFilterSource(e.target.value)}
-              className="px-3 py-2 border rounded-md bg-background w-full sm:w-[200px]"
-            >
-              <option value="all">All Sources</option>
-              <option value="salary">Salary</option>
-              <option value="freelance">Freelance</option>
-              <option value="investment">Investment</option>
-              <option value="gift">Gift</option>
-              <option value="other">Other</option>
-            </select>
+            <Select value={filterSource} onValueChange={setFilterSource}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Filter by source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {incomeSources.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source.charAt(0).toUpperCase() + source.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Incomes List */}
-      <Card>
+      {/* Data Table */}
+      <Card className="border-0 shadow-lg bg-white">
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">
-            All Incomes ({filteredIncomes.length})
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <CardTitle className="text-lg sm:text-xl">Incomes Table</CardTitle>
+            <Button variant="outline" className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          {filteredIncomes.length === 0 ? (
-            <div className="text-center py-8">
-              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No incomes found</h3>
-              <p className="text-muted-foreground mb-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : filteredIncomes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium mb-2">No incomes found</p>
+              <p className="text-gray-400 text-sm mt-2">
                 {searchTerm || filterSource !== "all"
-                  ? "Try adjusting your search or filter criteria."
-                  : "Start tracking your income by adding your first income source."}
+                  ? "Try adjusting your filters"
+                  : "Click 'Add Income' to create your first income"}
               </p>
-              <Button
-                onClick={() => setModalOpen(true)}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Income
-              </Button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredIncomes.map((income) => (
-                <div
-                  key={income._id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-md hover:scale-[1.01] gap-3 min-w-0"
-                >
-                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-2 bg-green-100 text-green-600 rounded-full flex-shrink-0">
-                      <TrendingUp className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                        <h3
-                          className="font-semibold truncate text-sm sm:text-base"
-                          title={income.title}
-                        >
-                          {income.title}
-                        </h3>
-                        {income.categoryId && (
+            <div className="w-full overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-auto min-w-[120px]">
+                        Title
+                      </TableHead>
+                      <TableHead className="hidden sm:table-cell w-auto">
+                        Category
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell w-auto">
+                        Source
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell w-auto">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-right w-auto min-w-[80px]">
+                        Amount
+                      </TableHead>
+                      <TableHead className="text-right w-auto min-w-[100px]">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredIncomes.map((income) => (
+                      <TableRow key={income._id}>
+                        <TableCell className="font-medium max-w-[120px]">
+                          <div className="min-w-0">
+                            <p
+                              className="font-semibold text-gray-900 text-sm truncate"
+                              title={income.title}
+                            >
+                              {income.title}
+                            </p>
+                            {income.notes && (
+                              <p
+                                className="text-xs text-gray-500 mt-1 truncate"
+                                title={income.notes}
+                              >
+                                {income.notes}
+                              </p>
+                            )}
+                            {/* Mobile-only info */}
+                            <div className="sm:hidden mt-2 space-y-1">
+                              {income.categoryId && (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-gray-100 text-gray-700 text-xs truncate max-w-[100px]"
+                                >
+                                  <span className="mr-1">
+                                    {income.categoryId.icon}
+                                  </span>
+                                  <span className="truncate">
+                                    {income.categoryId.name}
+                                  </span>
+                                </Badge>
+                              )}
+                              <div className="text-xs text-gray-500">
+                                {format(new Date(income.date), "MMM dd")}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell max-w-[100px]">
+                          {income.categoryId ? (
+                            <Badge
+                              variant="secondary"
+                              className="bg-gray-100 text-gray-700 text-xs truncate"
+                              title={income.categoryId.name}
+                            >
+                              <span className="mr-1">
+                                {income.categoryId.icon}
+                              </span>
+                              <span className="truncate">
+                                {income.categoryId.name}
+                              </span>
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-gray-400 text-xs"
+                            >
+                              Uncategorized
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell max-w-[80px]">
                           <Badge
-                            variant="secondary"
-                            className="text-xs self-start truncate max-w-[120px]"
-                            style={{
-                              backgroundColor: income.categoryId.color + "20",
-                              color: income.categoryId.color,
-                            }}
-                            title={income.categoryId.name}
+                            variant="outline"
+                            className="capitalize text-xs"
                           >
-                            {income.categoryId.icon}{" "}
-                            <span className="truncate">
-                              {income.categoryId.name}
-                            </span>
+                            {income.source}
                           </Badge>
-                        )}
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(new Date(income.date), "MMM dd, yyyy")}
-                        </div>
-                        <Badge
-                          className={`text-xs ${getSourceColor(
-                            income.source
-                          )} truncate max-w-[100px]`}
-                          title={income.source}
-                        >
-                          {income.source}
-                        </Badge>
-                      </div>
-                      {income.notes && (
-                        <p
-                          className="text-xs sm:text-sm text-muted-foreground mt-1 truncate"
-                          title={income.notes}
-                        >
-                          {income.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-2">
-                    <div className="text-left sm:text-right">
-                      <div className="text-base sm:text-lg font-semibold text-green-600">
-                        +${income.amount.toLocaleString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(income)}
-                        className="hover:bg-blue-50 hover:text-blue-600 transition-colors h-7 w-7 p-0"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(income._id)}
-                        disabled={deleteLoading === income._id}
-                        className="h-7 w-7 p-0"
-                      >
-                        {deleteLoading === income._id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-3 w-3 text-red-600" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-gray-600 text-xs">
+                          {format(new Date(income.date), "MMM dd")}
+                        </TableCell>
+                        <TableCell className="text-right min-w-[80px]">
+                          <span className="text-sm sm:text-base font-semibold text-green-600">
+                            ${income.amount.toLocaleString()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right min-w-[100px]">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(income)}
+                              className="hover:bg-blue-50 hover:text-blue-600 h-7 w-7 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(income._id)}
+                              disabled={deleteLoading === income._id}
+                              className="hover:bg-red-50 hover:text-red-600 h-7 w-7 p-0"
+                            >
+                              {deleteLoading === income._id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Modal */}
+      <IncomeModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        onSuccess={handleModalSuccess}
+        income={editingIncome}
+      />
     </div>
   );
 }

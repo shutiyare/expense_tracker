@@ -26,10 +26,14 @@ const navigation = [
   { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+}
+
+export function Navbar({ mobileMenuOpen, setMobileMenuOpen }: NavbarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });

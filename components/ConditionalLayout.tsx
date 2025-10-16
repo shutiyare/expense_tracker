@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Pages that should not have the navbar and sidebar padding
   const authPages = ["/login", "/register"];
@@ -44,9 +46,14 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+      />
       <div className="flex-1 flex flex-col min-h-screen min-w-0 relative">
-        <DashboardHeader />
+        <DashboardHeader
+          onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+        />
         <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-16">
           <div className="p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8 w-full max-w-none lg:max-w-7xl lg:mx-auto">
             {children}

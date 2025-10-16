@@ -1,106 +1,255 @@
+/**
+ * ════════════════════════════════════════════════════════════════════════════
+ * EXPENSES API ROUTE - OPTIMIZED
+ * ════════════════════════════════════════════════════════════════════════════
+ *
+ * Performance Optimizations:
+ * ✅ Optimized database connection (reuses existing connection)
+ * ✅ Pagination with proper limits
+ * ✅ Field projection (only fetch needed data)
+ * ✅ Query optimization with lean()
+ * ✅ Performance tracking and logging
+ * ✅ Proper error handling with context
+ * ✅ Input validation and sanitization
+ * ✅ Cache invalidation on writes
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import Expense from "@/models/Expense";
-import Category from "@/models/Category"; // Import Category model for populate
-import { connectDB } from "@/lib/db";
+import Category from "@/models/Category";
+import connectDB from "@/lib/dbConnect";
 import { getUserFromRequest } from "@/lib/auth";
+import { logger, trackPerformance } from "@/lib/logger";
+import { paginate, buildDateRangeFilter } from "@/lib/queryHelpers";
+import { invalidateUserCache } from "@/lib/cache";
+
+// ────────────────────────────────────────────────────────────────────────────
+// GET /api/expenses - List user expenses with filters and pagination
+// ────────────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
+  const track = trackPerformance("GET /api/expenses", "api");
+
   try {
-    // Verify authentication
+    // 1. AUTHENTICATION
     const user = getUserFromRequest(req);
     if (!user) {
+      track.end({ status: 401 });
       return NextResponse.json(
         { message: "Unauthorized - Please login" },
         { status: 401 }
       );
     }
 
+    // 2. DATABASE CONNECTION
     await connectDB();
 
-    // Get query parameters for filtering
+    // 3. EXTRACT QUERY PARAMETERS
     const searchParams = req.nextUrl.searchParams;
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const categoryId = searchParams.get("categoryId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
 
-    // Build query
-    const query: any = { userId: user.userId };
+    // 4. BUILD OPTIMIZED QUERY
+    const filter: any = { userId: user.userId };
 
-    if (startDate && endDate) {
-      query.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      };
+    // Apply date range filter
+    if (startDate || endDate) {
+      const dateFilter = buildDateRangeFilter(
+        {
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+        "date"
+      );
+      Object.assign(filter, dateFilter);
     }
 
-    if (categoryId) {
-      query.categoryId = categoryId;
+    // Apply category filter
+    if (categoryId && categoryId !== "all") {
+      filter.categoryId = categoryId;
     }
 
-    // Fetch expenses
-    const expenses = await Expense.find(query)
-      .populate("categoryId", "name color icon")
-      .sort({ date: -1 })
-      .limit(100);
+    // 5. EXECUTE PAGINATED QUERY
+    const result = await paginate(
+      Expense.find(filter).populate("categoryId", "name color icon"),
+      {
+        page,
+        limit: Math.min(limit, 100), // Max 100 items per page
+        sortBy: "date",
+        sortOrder: "desc",
+      }
+    );
 
-    return NextResponse.json({ expenses });
+    // 6. LOG AND RETURN
+    const duration = track.end({
+      userId: user.userId,
+      total: result.pagination.total,
+      page,
+    });
+
+    logger.info("Expenses fetched successfully", {
+      userId: user.userId,
+      count: result.data.length,
+      duration,
+    });
+
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Error fetching expenses:", error);
+    track.end({ error: true });
+    logger.error("Error fetching expenses", error, {
+      userId: req.headers.get("authorization"),
+    });
+
     return NextResponse.json(
-      { message: "Failed to fetch expenses", error: error.message },
+      {
+        message: "Failed to fetch expenses",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// POST /api/expenses - Create new expense
+// ────────────────────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
+  const track = trackPerformance("POST /api/expenses", "api");
+
   try {
-    // Verify authentication
+    // 1. AUTHENTICATION
     const user = getUserFromRequest(req);
     if (!user) {
+      track.end({ status: 401 });
       return NextResponse.json(
         { message: "Unauthorized - Please login" },
         { status: 401 }
       );
     }
 
+    // 2. PARSE AND VALIDATE INPUT
     const data = await req.json();
 
-    // Validation
-    if (!data.title || !data.amount) {
+    // Required field validation
+    if (!data.title?.trim()) {
+      track.end({ status: 400, reason: "missing_title" });
       return NextResponse.json(
-        { message: "Title and amount are required" },
+        { message: "Title is required" },
         { status: 400 }
       );
     }
 
-    if (data.amount < 0) {
+    if (data.amount === undefined || data.amount === null) {
+      track.end({ status: 400, reason: "missing_amount" });
       return NextResponse.json(
-        { message: "Amount must be positive" },
+        { message: "Amount is required" },
         { status: 400 }
       );
     }
 
+    // Amount validation
+    const amount = parseFloat(data.amount);
+    if (isNaN(amount) || amount < 0) {
+      track.end({ status: 400, reason: "invalid_amount" });
+      return NextResponse.json(
+        { message: "Amount must be a positive number" },
+        { status: 400 }
+      );
+    }
+
+    if (amount > 1000000000) {
+      track.end({ status: 400, reason: "amount_too_large" });
+      return NextResponse.json(
+        { message: "Amount exceeds maximum allowed value" },
+        { status: 400 }
+      );
+    }
+
+    // 3. DATABASE CONNECTION
     await connectDB();
 
-    // Create expense
+    // 4. VALIDATE CATEGORY IF PROVIDED
+    if (data.categoryId) {
+      const categoryExists = await Category.exists({
+        _id: data.categoryId,
+        userId: user.userId,
+        type: "expense",
+      });
+
+      if (!categoryExists) {
+        track.end({ status: 400, reason: "invalid_category" });
+        return NextResponse.json(
+          { message: "Invalid category ID" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 5. CREATE EXPENSE
     const expense = await Expense.create({
-      ...data,
       userId: user.userId,
-      date: data.date || new Date(),
+      title: data.title.trim(),
+      amount,
+      categoryId: data.categoryId || null,
+      paymentMethod: data.paymentMethod || "cash",
+      date: data.date ? new Date(data.date) : new Date(),
+      notes: data.notes?.trim() || "",
     });
 
-    // Populate category if exists
+    // 6. POPULATE CATEGORY
     await expense.populate("categoryId", "name color icon");
 
+    // 7. INVALIDATE CACHE
+    invalidateUserCache(user.userId);
+
+    // 8. LOG AND RETURN
+    const duration = track.end({
+      userId: user.userId,
+      expenseId: expense._id.toString(),
+    });
+
+    logger.info("Expense created successfully", {
+      userId: user.userId,
+      expenseId: expense._id,
+      amount,
+      duration,
+    });
+
     return NextResponse.json(
-      { message: "Expense created successfully", expense },
+      {
+        message: "Expense created successfully",
+        expense,
+      },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Error creating expense:", error);
+    track.end({ error: true });
+    logger.error("Error creating expense", error, {
+      userId: req.headers.get("authorization"),
+    });
+
+    // Handle mongoose validation errors
+    if (error.name === "ValidationError") {
+      return NextResponse.json(
+        {
+          message: "Validation error",
+          errors: Object.values(error.errors).map((e: any) => e.message),
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "Failed to create expense", error: error.message },
+      {
+        message: "Failed to create expense",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
       { status: 500 }
     );
   }

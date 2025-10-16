@@ -79,6 +79,7 @@ export function IncomeModal({
   const fetchCategories = async () => {
     try {
       const response = await apiClient.get("/api/categories?type=income");
+      // API returns { categories: [...], cached: boolean }
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -138,12 +139,12 @@ export function IncomeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <DialogTitle className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             {income ? "Edit Income" : "Add New Income"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base">
             {income
               ? "Update your income details below."
               : "Fill in the details to record a new income."}
@@ -151,7 +152,7 @@ export function IncomeModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">
                 Title <span className="text-green-500">*</span>

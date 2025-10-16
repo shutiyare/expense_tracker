@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Calendar,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import apiClient from "@/lib/axios";
 import { format } from "date-fns";
@@ -52,7 +53,8 @@ export default function IncomesPage() {
     try {
       setLoading(true);
       const response = await apiClient.get("/api/incomes");
-      setIncomes(response.data.incomes || []);
+      // API returns { data: [...], pagination: {...} }
+      setIncomes(response.data.data || []);
     } catch (error) {
       console.error("Error fetching incomes:", error);
     } finally {
@@ -127,24 +129,38 @@ export default function IncomesPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             Incomes
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Track your income sources and earnings.
           </p>
         </div>
-        <Button
-          onClick={() => setModalOpen(true)}
-          className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Income
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchIncomes}
+            disabled={loading}
+            className="hover:bg-gray-50 w-full sm:w-auto"
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+          <Button
+            onClick={() => setModalOpen(true)}
+            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Income
+          </Button>
+        </div>
       </div>
 
       <IncomeModal
@@ -165,7 +181,7 @@ export default function IncomesPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
             ${totalIncomes.toLocaleString()}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
@@ -178,23 +194,23 @@ export default function IncomesPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filter & Search</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Filter & Search</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search incomes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
             <select
               value={filterSource}
               onChange={(e) => setFilterSource(e.target.value)}
-              className="px-3 py-2 border rounded-md bg-background"
+              className="px-3 py-2 border rounded-md bg-background w-full sm:w-[200px]"
             >
               <option value="all">All Sources</option>
               <option value="salary">Salary</option>
@@ -210,7 +226,9 @@ export default function IncomesPage() {
       {/* Incomes List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Incomes ({filteredIncomes.length})</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">
+            All Incomes ({filteredIncomes.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredIncomes.length === 0 ? (
@@ -235,51 +253,64 @@ export default function IncomesPage() {
               {filteredIncomes.map((income) => (
                 <div
                   key={income._id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-md hover:scale-[1.01]"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent transition-all duration-200 hover:shadow-md hover:scale-[1.01] gap-3 min-w-0"
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="p-2 bg-green-100 text-green-600 rounded-full">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
+                    <div className="p-2 bg-green-100 text-green-600 rounded-full flex-shrink-0">
                       <TrendingUp className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold truncate">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                        <h3
+                          className="font-semibold truncate text-sm sm:text-base"
+                          title={income.title}
+                        >
                           {income.title}
                         </h3>
                         {income.categoryId && (
                           <Badge
                             variant="secondary"
-                            className="text-xs"
+                            className="text-xs self-start truncate max-w-[120px]"
                             style={{
                               backgroundColor: income.categoryId.color + "20",
                               color: income.categoryId.color,
                             }}
+                            title={income.categoryId.name}
                           >
-                            {income.categoryId.icon} {income.categoryId.name}
+                            {income.categoryId.icon}{" "}
+                            <span className="truncate">
+                              {income.categoryId.name}
+                            </span>
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {format(new Date(income.date), "MMM dd, yyyy")}
                         </div>
                         <Badge
-                          className={`text-xs ${getSourceColor(income.source)}`}
+                          className={`text-xs ${getSourceColor(
+                            income.source
+                          )} truncate max-w-[100px]`}
+                          title={income.source}
                         >
                           {income.source}
                         </Badge>
                       </div>
                       {income.notes && (
-                        <p className="text-sm text-muted-foreground mt-1 truncate">
+                        <p
+                          className="text-xs sm:text-sm text-muted-foreground mt-1 truncate"
+                          title={income.notes}
+                        >
                           {income.notes}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-green-600">
+                  <div className="flex items-center justify-between sm:justify-end gap-2">
+                    <div className="text-left sm:text-right">
+                      <div className="text-base sm:text-lg font-semibold text-green-600">
                         +${income.amount.toLocaleString()}
                       </div>
                     </div>
@@ -288,20 +319,21 @@ export default function IncomesPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(income)}
-                        className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="hover:bg-blue-50 hover:text-blue-600 transition-colors h-7 w-7 p-0"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(income._id)}
                         disabled={deleteLoading === income._id}
+                        className="h-7 w-7 p-0"
                       >
                         {deleteLoading === income._id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-3 w-3 text-red-600" />
                         )}
                       </Button>
                     </div>

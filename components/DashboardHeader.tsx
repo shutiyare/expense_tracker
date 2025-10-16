@@ -22,8 +22,10 @@ import {
   Wallet,
   TrendingUp,
   TrendingDown,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
+import { useAppData } from "@/contexts/AppDataContext";
 
 interface DashboardHeaderProps {
   onMenuToggle?: () => void;
@@ -31,6 +33,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   const { data: session, status } = useSession();
+  const { stats, loading: statsLoading } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
@@ -66,19 +69,19 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   }
 
   return (
-    <div className="h-16 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-50 backdrop-blur-sm shadow-sm">
+    <div className="h-16 bg-gradient-to-r from-blue-50/95 to-indigo-50/95 border-b border-blue-200 flex items-center justify-between px-3 sm:px-4 lg:px-6 fixed top-0 right-0 left-0 lg:left-64 z-50 backdrop-blur-md shadow-lg min-w-0">
       {/* Left Section */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={onMenuToggle}
-          className="md:hidden hover:bg-gray-100"
+          className="lg:hidden hover:bg-gray-100 h-8 w-8 p-0"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
 
-        <div className="hidden md:flex items-center space-x-2">
+        <div className="hidden lg:flex items-center space-x-2">
           <div className="flex items-center space-x-2">
             <div className="p-1 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
               <Wallet className="h-4 w-4 text-white" />
@@ -89,8 +92,8 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="hidden lg:flex items-center space-x-2">
+        {/* Search Bar - Hidden on mobile, visible on larger screens */}
+        <div className="hidden xl:flex items-center space-x-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
@@ -105,25 +108,52 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-4">
-        {/* Quick Stats */}
-        <div className="hidden lg:flex items-center space-x-4">
-          <div className="flex items-center space-x-1 text-green-600">
-            <TrendingUp className="h-4 w-4" />
-            <span className="text-sm font-medium">+$2,450</span>
-          </div>
-          <div className="flex items-center space-x-1 text-red-600">
-            <TrendingDown className="h-4 w-4" />
-            <span className="text-sm font-medium">-$1,230</span>
-          </div>
+      <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        {/* Quick Stats - Hidden on mobile and tablet */}
+        <div className="hidden xl:flex items-center space-x-4">
+          {statsLoading ? (
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                <span className="text-sm font-medium text-gray-400">
+                  Loading...
+                </span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                <span className="text-sm font-medium text-gray-400">
+                  Loading...
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center space-x-1 text-green-600">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  +${stats.totalIncome.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center space-x-1 text-red-600">
+                <TrendingDown className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  -${stats.totalExpenses.toLocaleString()}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Notifications */}
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative h-8 w-8 sm:h-10 sm:w-10 p-0"
+        >
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           <Badge
             variant="destructive"
-            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-xs"
           >
             3
           </Badge>
@@ -132,13 +162,16 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
         {/* User Avatar & Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10 border-2 border-gray-200">
+            <Button
+              variant="ghost"
+              className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0"
+            >
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-gray-200">
                 <AvatarImage
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.email}`}
                   alt={session?.user?.name || "User"}
                 />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-xs sm:text-sm">
                   {session?.user?.name ? getInitials(session.user.name) : "U"}
                 </AvatarFallback>
               </Avatar>

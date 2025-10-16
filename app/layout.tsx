@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { AppDataProvider } from "@/contexts/AppDataContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +33,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-          <ToastProvider />
+          <AppDataProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+            <ToastProvider />
+          </AppDataProvider>
         </SessionProvider>
       </body>
     </html>

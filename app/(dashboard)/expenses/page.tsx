@@ -70,7 +70,8 @@ export default function ExpensesPage() {
     try {
       setLoading(true);
       const response = await apiClient.get("/api/expenses");
-      setExpenses(response.data.expenses || []);
+      // API returns { data: [...], pagination: {...} }
+      setExpenses(response.data.data || []);
     } catch (error) {
       console.error("Error fetching expenses:", error);
       toast({
@@ -136,24 +137,24 @@ export default function ExpensesPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
             Expenses
           </h1>
-          <p className="text-gray-600 mt-2 text-sm md:text-base">
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
             Track and manage your expenses
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="outline"
             size="sm"
             onClick={fetchExpenses}
             disabled={loading}
-            className="hover:bg-gray-50"
+            className="hover:bg-gray-50 w-full sm:w-auto"
           >
             <RefreshCw
               className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -162,7 +163,7 @@ export default function ExpensesPage() {
           </Button>
           <Button
             onClick={() => setModalOpen(true)}
-            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg"
+            className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg w-full sm:w-auto"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Expense
@@ -170,8 +171,8 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Stats Card */}
-      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
+      {/* Stats Cards */}
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="border-0 shadow-lg bg-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -182,7 +183,7 @@ export default function ExpensesPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-red-600">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">
               ${totalExpenses.toLocaleString()}
             </div>
             <p className="text-xs text-gray-500 mt-2">
@@ -201,7 +202,7 @@ export default function ExpensesPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-blue-600">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600">
               $
               {filteredExpenses.length > 0
                 ? (totalExpenses / filteredExpenses.length).toFixed(2)
@@ -221,7 +222,7 @@ export default function ExpensesPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">
               {paymentMethods.length}
             </div>
             <p className="text-xs text-gray-500 mt-2">Different methods used</p>
@@ -232,21 +233,21 @@ export default function ExpensesPage() {
       {/* Filters and Search */}
       <Card className="border-0 shadow-lg bg-white">
         <CardHeader>
-          <CardTitle className="text-xl">Filter & Search</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Filter & Search</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search expenses..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
             <Select value={filterMethod} onValueChange={setFilterMethod}>
-              <SelectTrigger className="w-full md:w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Payment Method" />
               </SelectTrigger>
               <SelectContent>
@@ -265,9 +266,13 @@ export default function ExpensesPage() {
       {/* Data Table */}
       <Card className="border-0 shadow-lg bg-white">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="text-xl">Expenses Table</CardTitle>
-            <Button variant="outline" size="sm" className="hover:bg-gray-50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <CardTitle className="text-lg sm:text-xl">Expenses Table</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="hover:bg-gray-50 w-full sm:w-auto"
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -289,92 +294,140 @@ export default function ExpensesPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[250px]">Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Payment Method</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredExpenses.map((expense) => (
-                    <TableRow key={expense._id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {expense.title}
-                          </p>
-                          {expense.notes && (
-                            <p className="text-sm text-gray-500 mt-1 truncate max-w-[200px]">
-                              {expense.notes}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {expense.categoryId ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-gray-100 text-gray-700"
-                          >
-                            <span className="mr-1">
-                              {expense.categoryId.icon}
-                            </span>
-                            {expense.categoryId.name}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-400">
-                            Uncategorized
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {expense.paymentMethod}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-600">
-                        {format(new Date(expense.date), "MMM dd, yyyy")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className="text-lg font-semibold text-red-600">
-                          ${expense.amount.toLocaleString()}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(expense)}
-                            className="hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(expense._id)}
-                            disabled={deleteLoading === expense._id}
-                            className="hover:bg-red-50 hover:text-red-600"
-                          >
-                            {deleteLoading === expense._id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
+            <div className="w-full overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-auto min-w-[120px]">
+                        Title
+                      </TableHead>
+                      <TableHead className="hidden sm:table-cell w-auto">
+                        Category
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell w-auto">
+                        Method
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell w-auto">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-right w-auto min-w-[80px]">
+                        Amount
+                      </TableHead>
+                      <TableHead className="text-right w-auto min-w-[100px]">
+                        Actions
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredExpenses.map((expense) => (
+                      <TableRow key={expense._id}>
+                        <TableCell className="font-medium max-w-[120px]">
+                          <div className="min-w-0">
+                            <p
+                              className="font-semibold text-gray-900 text-sm truncate"
+                              title={expense.title}
+                            >
+                              {expense.title}
+                            </p>
+                            {expense.notes && (
+                              <p
+                                className="text-xs text-gray-500 mt-1 truncate"
+                                title={expense.notes}
+                              >
+                                {expense.notes}
+                              </p>
+                            )}
+                            {/* Mobile-only info */}
+                            <div className="sm:hidden mt-2 space-y-1">
+                              {expense.categoryId && (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-gray-100 text-gray-700 text-xs truncate max-w-[100px]"
+                                >
+                                  <span className="mr-1">
+                                    {expense.categoryId.icon}
+                                  </span>
+                                  <span className="truncate">
+                                    {expense.categoryId.name}
+                                  </span>
+                                </Badge>
+                              )}
+                              <div className="text-xs text-gray-500">
+                                {format(new Date(expense.date), "MMM dd")}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell max-w-[100px]">
+                          {expense.categoryId ? (
+                            <Badge
+                              variant="secondary"
+                              className="bg-gray-100 text-gray-700 text-xs truncate"
+                              title={expense.categoryId.name}
+                            >
+                              <span className="mr-1">
+                                {expense.categoryId.icon}
+                              </span>
+                              <span className="truncate">
+                                {expense.categoryId.name}
+                              </span>
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-gray-400 text-xs"
+                            >
+                              Uncategorized
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell max-w-[80px]">
+                          <Badge
+                            variant="outline"
+                            className="capitalize text-xs"
+                          >
+                            {expense.paymentMethod}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-gray-600 text-xs">
+                          {format(new Date(expense.date), "MMM dd")}
+                        </TableCell>
+                        <TableCell className="text-right min-w-[80px]">
+                          <span className="text-sm sm:text-base font-semibold text-red-600">
+                            ${expense.amount.toLocaleString()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right min-w-[100px]">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(expense)}
+                              className="hover:bg-blue-50 hover:text-blue-600 h-7 w-7 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(expense._id)}
+                              disabled={deleteLoading === expense._id}
+                              className="hover:bg-red-50 hover:text-red-600 h-7 w-7 p-0"
+                            >
+                              {deleteLoading === expense._id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>

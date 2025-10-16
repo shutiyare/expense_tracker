@@ -135,8 +135,9 @@ export default function ReportsPage() {
         apiClient.get(`/api/incomes?${params.toString()}`),
       ]);
 
-      setExpenses(expensesRes.data.expenses || []);
-      setIncomes(incomesRes.data.incomes || []);
+      // API returns { data: [...], pagination: {...} }
+      setExpenses(expensesRes.data.data || []);
+      setIncomes(incomesRes.data.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -233,12 +234,14 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Reports
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Analyze your financial data with detailed reports and charts.
           </p>
         </div>
@@ -300,14 +303,14 @@ export default function ReportsPage() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Income</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               ${totalIncomes.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -324,7 +327,7 @@ export default function ReportsPage() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">
               ${totalExpenses.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -341,7 +344,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${
+              className={`text-xl sm:text-2xl font-bold ${
                 balance >= 0 ? "text-green-600" : "text-red-600"
               }`}
             >
@@ -355,14 +358,14 @@ export default function ReportsPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Monthly Trend */}
         <Card>
           <CardHeader>
             <CardTitle>Monthly Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
@@ -394,7 +397,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             {expenseByCategory.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
                     data={expenseByCategory}

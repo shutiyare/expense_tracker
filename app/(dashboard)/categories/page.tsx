@@ -90,6 +90,7 @@ export default function CategoriesPage() {
     try {
       setLoading(true);
       const response = await apiClient.get("/api/categories");
+      // API returns { categories: [...], cached: boolean }
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -165,14 +166,14 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Categories
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Organize your expenses and incomes with custom categories.
           </p>
         </div>
@@ -189,13 +190,13 @@ export default function CategoriesPage() {
       {showForm && (
         <Card className="border-2 border-purple-200 shadow-xl animate-slide-in">
           <CardHeader>
-            <CardTitle className="text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {editingCategory ? "Edit Category" : "Add New Category"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Category Name *</Label>
                   <Input
@@ -301,7 +302,7 @@ export default function CategoriesPage() {
             <div className="p-2 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg">
               <TrendingDown className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl">
+            <span className="text-lg sm:text-xl">
               Expense Categories ({expenseCategories.length})
             </span>
           </CardTitle>
@@ -318,11 +319,11 @@ export default function CategoriesPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {expenseCategories.map((category, index) => (
                 <div
                   key={category._id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] animate-fade-in-up"
+                  className="flex items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] animate-fade-in-up min-w-0"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex items-center gap-3">
@@ -367,7 +368,7 @@ export default function CategoriesPage() {
             <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl">
+            <span className="text-lg sm:text-xl">
               Income Categories ({incomeCategories.length})
             </span>
           </CardTitle>
@@ -384,11 +385,11 @@ export default function CategoriesPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {incomeCategories.map((category, index) => (
                 <div
                   key={category._id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] animate-fade-in-up"
+                  className="flex items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] animate-fade-in-up min-w-0"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex items-center gap-3">

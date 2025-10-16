@@ -43,12 +43,14 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       <Navbar />
-      <div className="md:pl-64">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 relative">
         <DashboardHeader />
-        <main className="flex-1">
-          <div className="p-4 md:p-6 pt-4">{children}</div>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-16">
+          <div className="p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8 w-full max-w-none lg:max-w-7xl lg:mx-auto">
+            {children}
+          </div>
         </main>
         <Footer />
       </div>

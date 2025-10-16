@@ -38,10 +38,13 @@ export function Navbar() {
   return (
     <>
       {/* Desktop Navbar */}
-      <nav className="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col border-r bg-gradient-to-b from-white to-blue-50/30 shadow-lg">
-        <div className="flex h-16 items-center border-b border-blue-100 px-6">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <Wallet className="h-6 w-6 text-blue-600" />
+      <nav className="hidden lg:flex fixed left-0 top-0 h-screen w-64 flex-col border-r bg-gradient-to-b from-white to-blue-50/30 shadow-lg z-30 flex-shrink-0">
+        <div className="flex h-16 items-center border-b border-blue-100 px-4 xl:px-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-lg xl:text-xl"
+          >
+            <Wallet className="h-5 w-5 xl:h-6 xl:w-6 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
               ExpenseTracker
             </span>
@@ -102,11 +105,14 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Navbar */}
-      <div className="md:hidden">
-        <div className="fixed top-0 left-0 right-0 h-16 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 z-50 flex items-center justify-between px-4 shadow-sm">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <Wallet className="h-5 w-5 text-blue-600" />
+      {/* Mobile/Tablet Navbar */}
+      <div className="lg:hidden">
+        <div className="fixed top-0 left-0 right-0 h-16 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 z-50 flex items-center justify-between px-3 sm:px-4 shadow-sm">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-base sm:text-lg"
+          >
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
               ExpenseTracker
             </span>
@@ -116,11 +122,12 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             ) : (
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
             )}
           </Button>
         </div>
@@ -128,7 +135,7 @@ export function Navbar() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 top-16 z-40 bg-background/80 backdrop-blur-sm">
-            <div className="fixed left-0 top-16 bottom-0 w-64 border-r bg-card p-4">
+            <div className="fixed left-0 top-16 bottom-0 w-64 border-r bg-card p-4 overflow-y-auto">
               <div className="space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;

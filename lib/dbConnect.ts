@@ -92,12 +92,10 @@ mongoose.connection.on("connected", () => {
   connectionState.lastConnected = new Date();
   connectionState.lastError = null;
 
-  console.log("✅ MongoDB connected successfully", {
-    readyState: mongoose.connection.readyState,
-    host: mongoose.connection.host,
-    name: mongoose.connection.name,
-    poolSize: MONGOOSE_OPTIONS.maxPoolSize,
-  });
+  // Only log on first connection
+  if (connectionState.connectionAttempts === 1) {
+    console.log("✅ MongoDB connected");
+  }
 });
 
 mongoose.connection.on("error", (error) => {
@@ -120,25 +118,26 @@ mongoose.connection.on("reconnected", () => {
   connectionState.isConnected = true;
   connectionState.lastConnected = new Date();
 
-  console.log("✅ MongoDB reconnected successfully");
+  // Suppress reconnection logs
+  // console.log("✅ MongoDB reconnected successfully");
 });
 
-// Monitor slow queries in development
-if (process.env.NODE_ENV === "development") {
-  mongoose.connection.on("commandStarted", (event) => {
-    const startTime = Date.now();
-    mongoose.connection.once("commandSucceeded", () => {
-      const duration = Date.now() - startTime;
-      if (duration > 100) {
-        // Log queries taking > 100ms
-        console.warn(
-          `⚠️ Slow query detected (${duration}ms):`,
-          event.commandName
-        );
-      }
-    });
-  });
-}
+// Disable slow query monitoring in development (too verbose)
+// if (process.env.NODE_ENV === "development") {
+//   mongoose.connection.on("commandStarted", (event) => {
+//     const startTime = Date.now();
+//     mongoose.connection.once("commandSucceeded", () => {
+//       const duration = Date.now() - startTime;
+//       if (duration > 100) {
+//         // Log queries taking > 100ms
+//         console.warn(
+//           `⚠️ Slow query detected (${duration}ms):`,
+//           event.commandName
+//         );
+//       }
+//     });
+//   });
+// }
 
 // ────────────────────────────────────────────────────────────────────────────
 // MAIN CONNECTION FUNCTION
@@ -171,9 +170,8 @@ export async function connectDB(): Promise<typeof mongoose> {
     connectionState.isConnecting = true;
     connectionState.connectionAttempts++;
 
-    console.log(
-      `🔄 Initiating MongoDB connection (attempt #${connectionState.connectionAttempts})...`
-    );
+    // Suppress connection attempt logs
+    // console.log(`🔄 Initiating MongoDB connection (attempt #${connectionState.connectionAttempts})...`);
 
     // Create connection promise and store it globally
     connectionPromise = mongoose.connect(MONGODB_URI, MONGOOSE_OPTIONS);

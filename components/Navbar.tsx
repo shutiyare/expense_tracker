@@ -16,7 +16,7 @@ import {
   X,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -34,6 +34,23 @@ interface NavbarProps {
 export function Navbar({ mobileMenuOpen, setMobileMenuOpen }: NavbarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  // Close mobile menu when screen size becomes large (desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setMobileMenuOpen]);
+
+  // Close menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname, setMobileMenuOpen]);
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
@@ -138,8 +155,14 @@ export function Navbar({ mobileMenuOpen, setMobileMenuOpen }: NavbarProps) {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 top-16 z-40 bg-background/80 backdrop-blur-sm">
-            <div className="fixed left-0 top-16 bottom-0 w-64 border-r bg-card p-4 overflow-y-auto">
+          <div
+            className="fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <div
+              className="fixed left-0 top-16 bottom-0 w-64 border-r bg-white p-4 overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;

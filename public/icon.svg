@@ -1,0 +1,68 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#grad1)"/>
+  
+  <!-- Wallet Icon -->
+  <g transform="translate(130, 140)">
+    <!-- Wallet body -->
+    <rect x="60" y="80" width="180" height="140" rx="12" fill="white" opacity="0.95"/>
+    <rect x="65" y="85" width="170" height="130" rx="8" fill="url(#grad2)"/>
+    
+    <!-- Wallet fold -->
+    <path d="M 60 80 Q 150 100 240 80 L 240 120 Q 150 140 60 120 Z" fill="#1e40af" opacity="0.8"/>
+    
+    <!-- Card inside wallet -->
+    <rect x="75" y="140" width="150" height="90" rx="6" fill="white" opacity="0.9"/>
+    <rect x="85" y="150" width="130" height="8" rx="2" fill="#64748b"/>
+    <rect x="85" y="170" width="80" height="6" rx="2" fill="#cbd5e1"/>
+    <rect x="85" y="185" width="60" height="6" rx="2" fill="#cbd5e1"/>
+    <rect x="180" y="200" width="35" height="25" rx="3" fill="#3b82f6" opacity="0.7"/>
+    
+    <!-- Dollar sign on card -->
+    <text x="150" y="220" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">$</text>
+    
+    <!-- Money lines -->
+    <line x1="80" y1="100" x2="220" y2="100" stroke="white" stroke-width="3" opacity="0.6"/>
+    <line x1="80" y1="110" x2="200" y2="110" stroke="white" stroke-width="2" opacity="0.4"/>
+    
+    <!-- Sparkle effects -->
+    <circle cx="90" cy="110" r="3" fill="white" opacity="0.8"/>
+    <circle cx="210" cy="105" r="2.5" fill="white" opacity="0.8"/>
+    <circle cx="190" cy="115" r="2" fill="white" opacity="0.6"/>
+  </g>
+  
+  <!-- Chart/graph element -->
+  <g transform="translate(280, 320)">
+    <rect x="0" y="0" width="80" height="60" rx="4" fill="white" opacity="0.3"/>
+    <!-- Bar 1 -->
+    <rect x="10" y="40" width="12" height="20" rx="2" fill="white"/>
+    <!-- Bar 2 -->
+    <rect x="28" y="25" width="12" height="35" rx="2" fill="white"/>
+    <!-- Bar 3 -->
+    <rect x="46" y="30" width="12" height="30" rx="2" fill="white"/>
+    <!-- Bar 4 -->
+    <rect x="64" y="15" width="12" height="45" rx="2" fill="white"/>
+  </g>
+  
+  <!-- Arrow up (income) -->
+  <g transform="translate(200, 50)">
+    <path d="M 56 120 L 56 60 L 20 96 L 0 76 L 56 20 L 112 76 L 92 96 L 56 60" fill="white" opacity="0.9"/>
+  </g>
+  
+  <!-- Arrow down (expense) -->
+  <g transform="translate(240, 350)">
+    <path d="M 56 20 L 56 80 L 92 44 L 112 64 L 56 120 L 0 64 L 20 44 L 56 80" fill="white" opacity="0.9"/>
+  </g>
+</svg>
+

@@ -44,7 +44,8 @@ export const authOptions: NextAuthOptions = {
             .lean();
 
           if (!user) {
-            console.error("User not found:", credentials.email);
+            // Suppress user not found logs
+            // console.error("User not found:", credentials.email);
             return null;
           }
 
@@ -55,7 +56,8 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
-            console.error("Invalid password for user:", credentials.email);
+            // Suppress invalid password logs
+            // console.error("Invalid password for user:", credentials.email);
             return null;
           }
 
@@ -78,7 +80,8 @@ export const authOptions: NextAuthOptions = {
             accessToken: token, // Store the JWT token
           };
         } catch (error: any) {
-          console.error("Auth error:", error);
+          // Only log unexpected errors
+          // console.error("Auth error:", error);
           return null;
         }
       },
@@ -119,10 +122,12 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user, account, profile }) {
-      console.log("User signed in:", user.email);
+      // Suppress sign-in logs
+      // console.log("User signed in:", user.email);
     },
     async signOut({ token, session }) {
-      console.log("User signed out");
+      // Suppress sign-out logs
+      // console.log("User signed out");
     },
   },
   session: {
@@ -131,16 +136,21 @@ export const authOptions: NextAuthOptions = {
     updateAge: 5 * 60, // Refresh session every 5 minutes if active
   },
   secret: process.env.NEXTAUTH_SECRET || "your-secret-key",
-  debug: process.env.NODE_ENV === "development",
+  debug: false,
   logger: {
     error(code, metadata) {
-      console.error("NextAuth Error:", code, metadata);
+      // Only log critical errors
+      if (code !== "DEBUG_ENABLED") {
+        console.error("NextAuth Error:", code, metadata);
+      }
     },
     warn(code) {
-      console.warn("NextAuth Warning:", code);
+      // Suppress warnings in development
+      // console.warn("NextAuth Warning:", code);
     },
     debug(code, metadata) {
-      console.log("NextAuth Debug:", code, metadata);
+      // Suppress debug logs
+      // console.log("NextAuth Debug:", code, metadata);
     },
   },
 };

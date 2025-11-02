@@ -68,7 +68,7 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 const CURRENT_LOG_LEVEL: LogLevel =
-  (process.env.LOG_LEVEL as LogLevel) || (isDevelopment ? "debug" : "info");
+  (process.env.LOG_LEVEL as LogLevel) || (isDevelopment ? "warn" : "info");
 
 // Performance thresholds (milliseconds)
 const PERFORMANCE_THRESHOLDS = {
@@ -326,16 +326,18 @@ export function trackPerformance(
       const threshold = PERFORMANCE_THRESHOLDS[type];
       const isSlow = duration > threshold;
 
-      if (isSlow || isDevelopment) {
-        logger.info(`${operation} completed`, {
-          type: `${type}_performance`,
-          operation,
-          duration,
-          memoryDelta: Math.round((memoryDelta / 1024 / 1024) * 100) / 100, // MB
-          slow: isSlow,
-          ...context,
-        });
-      }
+      // Suppress all performance logs in development
+      // Only log in production for monitoring
+      // if (isSlow && type === "database") {
+      //   logger.warn(`${operation} is slow`, {
+      //     type: `${type}_performance`,
+      //     operation,
+      //     duration,
+      //     memoryDelta: Math.round((memoryDelta / 1024 / 1024) * 100) / 100, // MB
+      //     slow: isSlow,
+      //     ...context,
+      //   });
+      // }
 
       return duration;
     },

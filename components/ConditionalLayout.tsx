@@ -6,7 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -17,6 +17,18 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
 
   // Pages that should not have the navbar and sidebar padding
   const authPages = ["/login", "/register"];
@@ -50,12 +62,12 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
       />
-      <div className="flex-1 flex flex-col min-h-screen min-w-0 relative">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 relative lg:ml-64">
         <DashboardHeader
           onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-16">
-          <div className="p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8 w-full max-w-none lg:max-w-7xl lg:mx-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 lg:pt-16 pb-16 w-full">
+          <div className="p-2 sm:p-3 md:p-4 lg:p-4 xl:p-6 w-full">
             {children}
           </div>
         </main>
